@@ -1,0 +1,24 @@
+
+#----------------------------- Global Properties ----------------------------#
+
+/outputDir:bin/$(Platform)
+/intermediateDir:obj/$(Platform)
+/platform:DesktopGL
+/config:
+/profile:Reach
+/compress:False
+
+#-------------------------------- References --------------------------------#
+
+
+#---------------------------------- Content ---------------------------------#
+
+#begin images/atlas-definition.xml
+/copy:images/atlas-definition.xml
+
+#begin images/atlas.png
+/copy:images/atlas.png
+
+#begin images/logo.png
+/copy:images/logo.png
+

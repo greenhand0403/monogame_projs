@@ -1,0 +1,50 @@
+# =========================
+# Build outputs
+# =========================
+**/bin/
+**/obj/
+**/Debug/
+**/Release/
+
+# =========================
+# Visual Studio / VSCode
+# =========================
+.vs/
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# =========================
+# User files
+# =========================
+*.user
+*.rsuser
+*.suo
+*.userprefs
+
+# =========================
+# Logs / temp
+# =========================
+*.log
+*.tmp
+*.cache
+
+# =========================
+# OS junk
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# NuGet
+# =========================
+packages/
+*.nupkg
+
+# =========================
+# Mono crash
+# =========================
+mono_crash.*
