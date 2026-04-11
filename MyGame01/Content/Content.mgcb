@@ -17,8 +17,12 @@
 /copy:images/atlas-definition.xml
 
 #begin images/atlas.png
-/copy:images/atlas.png
+/importer:
+/processor:
+/build:images/atlas.png
 
 #begin images/logo.png
-/copy:images/logo.png
+/importer:
+/processor:
+/build:images/logo.png
 
