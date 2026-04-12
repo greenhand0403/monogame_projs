@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MyGameLib01;
 using MyGameLib01.Graphics;
+using MyGameLib01.Input;
 using SnakeGameLib;
 
 namespace MyGame01;
@@ -53,9 +54,6 @@ public class Game1 : Core
 
     protected override void Update(GameTime gameTime)
     {
-        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-            Exit();
-
         // Update the slime animated sprite.
         _slime.Update(gameTime);
 
@@ -74,18 +72,18 @@ public class Game1 : Core
     }
     private MoveCommand ReadKeyboardMoveCommand()
     {
-        KeyboardState keyboard = Keyboard.GetState();
-
-        if (keyboard.IsKeyDown(Keys.W) || keyboard.IsKeyDown(Keys.Up))
+        GamePadInfo gamePadOne = Input.GamePads[(int)PlayerIndex.One];
+        
+        if (Input.Keyboard.IsKeyDown(Keys.W) || Input.Keyboard.IsKeyDown(Keys.Up)|| gamePadOne.IsButtonDown(Buttons.DPadUp))
             return MoveCommand.Up;
 
-        if (keyboard.IsKeyDown(Keys.S) || keyboard.IsKeyDown(Keys.Down))
+        if (Input.Keyboard.IsKeyDown(Keys.S) || Input.Keyboard.IsKeyDown(Keys.Down)|| gamePadOne.IsButtonDown(Buttons.DPadDown))
             return MoveCommand.Down;
 
-        if (keyboard.IsKeyDown(Keys.A) || keyboard.IsKeyDown(Keys.Left))
+        if (Input.Keyboard.IsKeyDown(Keys.A) || Input.Keyboard.IsKeyDown(Keys.Left)|| gamePadOne.IsButtonDown(Buttons.DPadLeft))
             return MoveCommand.Left;
 
-        if (keyboard.IsKeyDown(Keys.D) || keyboard.IsKeyDown(Keys.Right))
+        if (Input.Keyboard.IsKeyDown(Keys.D) || Input.Keyboard.IsKeyDown(Keys.Right)|| gamePadOne.IsButtonDown(Buttons.DPadRight))
             return MoveCommand.Right;
 
         return MoveCommand.None;
@@ -104,6 +102,7 @@ public class Game1 : Core
         SpriteBatch.Begin(samplerState: SamplerState.PointClamp);
 
         _slime.Draw(SpriteBatch, _gameLogic.SlimePosition);
+        
         _bat.Draw(SpriteBatch, _gameLogic.BatPosition);
 
         SpriteBatch.End();
