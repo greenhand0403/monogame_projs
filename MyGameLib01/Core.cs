@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Input;
 using MyGameLib01.Input;
 
 namespace MyGameLib01;
-
+// MyGameLib01      -> 基础框架层
 public class Core : Game
 {
     internal static Core s_instance;

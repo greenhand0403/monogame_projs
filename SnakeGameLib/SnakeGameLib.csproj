@@ -7,4 +7,7 @@
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MyGameLib01\MyGameLib01.csproj" />
+  </ItemGroup>
 </Project>

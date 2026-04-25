@@ -7,7 +7,7 @@ using MyGameLib01.Input;
 using SnakeGameLib;
 
 namespace MyGame01;
-// 缓冲输入
+// MyGame01         -> Windows 可运行项目
 public class Game1 : Core
 {
     // Defines the slime animated sprite.
@@ -15,10 +15,10 @@ public class Game1 : Core
     // Defines the bat animated sprite.
     private AnimatedSprite _bat;
     private SnakeGame _gameLogic = null!;
-    // Speed multiplier when moving.
-    private const float MOVEMENT_SPEED = 200f;
-    private MoveCommand _currentMoveCommand = MoveCommand.Right;
-    public Game1() : base("MyGame01 hello", 1280, 720, false)
+    private MoveCommand _currentMoveCommand = MoveCommand.None;
+    public const int DesignWidth = 1280;
+    public const int DesignHeight = 720;
+    public Game1() : base("MyGame01 windows", DesignWidth, DesignHeight, false)
     {
 
     }
@@ -41,13 +41,13 @@ public class Game1 : Core
         _bat.Scale = new Vector2(4.0f, 4.0f);
         _bat.CenterOrigin();
 
-        _gameLogic = new SnakeGame(GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
-        _gameLogic.EatDistance = (int)(_slime.Width + _bat.Width) / 2;
+        _gameLogic = new SnakeGame(DesignWidth, DesignHeight);
+        // _gameLogic.EatDistance = (int)(_slime.Width + _bat.Width) / 2;
 
-        _gameLogic.SlimeHalfWidth = _slime.Width * 0.5f;
-        _gameLogic.SlimeHalfHeight = _slime.Height * 0.5f;
-        _gameLogic.BatHalfWidth = _bat.Width * 0.5f;
-        _gameLogic.BatHalfHeight = _bat.Height * 0.5f;
+        _gameLogic.SlimeWidth = _slime.Width;
+        _gameLogic.SlimeHeight = _slime.Height;
+        _gameLogic.BatWidth = _bat.Width;
+        _gameLogic.BatHeight = _bat.Height;
 
         _gameLogic.Reset();
     }
@@ -66,10 +66,11 @@ public class Game1 : Core
             _currentMoveCommand = newCommand;
         }
 
-        _gameLogic.Update(gameTime, _currentMoveCommand, MOVEMENT_SPEED);
+        _gameLogic.Update(gameTime, _currentMoveCommand);
 
         base.Update(gameTime);
     }
+
     private MoveCommand ReadKeyboardMoveCommand()
     {
         GamePadInfo gamePadOne = Input.GamePads[(int)PlayerIndex.One];
