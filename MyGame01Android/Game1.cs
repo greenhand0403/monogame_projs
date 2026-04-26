@@ -7,19 +7,6 @@ using MyGameLib01.Graphics;
 using SnakeGameLib;
 
 namespace MyGame01Android;
-// 需要创建安卓项目模板
-// `dotnet new mgandroid -o MyGame01Android` 并引用游戏类库 Lib01
-// 构建安卓程序命令行 SDK 
-// `dotnet build -c Release` 
-// 输出目录在 MyGame01Android\bin\Release\net9.0-android 注意此时并未生成程序安装包
-// 安装安卓SDK https://learn.microsoft.com/en-us/dotnet/android/getting-started/installation/dependencies
-// 在vs里面安装openjdk单个组件 https://learn.microsoft.com/en-us/previous-versions/xamarin/android/get-started/installation/openjdk
-// 命令行安装依赖项
-// dotnet build -t:InstallAndroidDependencies -f net9.0-android "-p:AndroidSdkDirectory=D:\zwc\app\android-sdk" "-p:AcceptAndroidSDKLicenses=true"
-// 注意mgcb管理器要将xml文件设置成copy,图片是build
-// 注意要先打开mgcb，清理缓存，然后再继续mgcb里面build一下，
-// `dotnet build -c Release -f net9.0-android -p:AndroidBuildApplicationPackage=true`
-// 此时才是生成安装包
 public class Game1 : Core
 {
     // Defines the slime animated sprite.
@@ -29,10 +16,10 @@ public class Game1 : Core
     private AnimatedSprite _bat;
     private SnakeGame _gameLogic = null!;
 
-    private MoveCommand _currentMoveCommand = MoveCommand.Right;
-    // Speed multiplier when moving.
-    private const float MOVEMENT_SPEED = 200f;
-    public Game1() : base("MyGame01Android Android", 1280, 720, false)
+    private MoveCommand _currentMoveCommand = MoveCommand.None;
+    public const int DesignWidth = 1280;
+    public const int DesignHeight = 720;
+    public Game1() : base("MyGame01Android Android", DesignWidth, DesignHeight, false)
     {
 
     }
@@ -63,12 +50,12 @@ public class Game1 : Core
         _bat.CenterOrigin();
 
         _gameLogic = new SnakeGame(GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
-        _gameLogic.EatDistance = (int)(_slime.Width + _bat.Width) / 2;
+        // _gameLogic.EatDistance = (int)(_slime.Width + _bat.Width) / 2;
 
-        _gameLogic.SlimeHalfWidth = _slime.Width * 0.5f;
-        _gameLogic.SlimeHalfHeight = _slime.Height * 0.5f;
-        _gameLogic.BatHalfWidth = _bat.Width * 0.5f;
-        _gameLogic.BatHalfHeight = _bat.Height * 0.5f;
+        _gameLogic.SlimeWidth = _slime.Width;
+        _gameLogic.SlimeHeight = _slime.Height;
+        _gameLogic.BatWidth = _bat.Width;
+        _gameLogic.BatHeight = _bat.Height;
 
         _gameLogic.Reset();
     }
@@ -90,7 +77,7 @@ public class Game1 : Core
             _currentMoveCommand = newCommand;
         }
 
-        _gameLogic.Update(gameTime, _currentMoveCommand, MOVEMENT_SPEED);
+        _gameLogic.Update(gameTime, _currentMoveCommand);
 
         base.Update(gameTime);
     }
