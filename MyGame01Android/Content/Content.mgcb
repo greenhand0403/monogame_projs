@@ -28,3 +28,6 @@
 /processorParam:TextureFormat=Color
 /build:images/atlas.png
 
+#begin images/tilemap-definition.xml
+/copy:images/tilemap-definition.xml
+

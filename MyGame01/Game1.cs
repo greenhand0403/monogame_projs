@@ -63,6 +63,7 @@ public class Game1 : Core
 
         _gameLogic.RoomBounds = _roomBounds;
         _gameLogic.Tilemap = _tilemap;
+        
         _gameLogic.SlimeWidth = _slime.Width;
         _gameLogic.SlimeHeight = _slime.Height;
         _gameLogic.BatWidth = _bat.Width;
