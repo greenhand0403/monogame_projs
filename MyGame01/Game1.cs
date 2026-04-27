@@ -18,6 +18,11 @@ public class Game1 : Core
     private MoveCommand _currentMoveCommand = MoveCommand.None;
     public const int DesignWidth = 1280;
     public const int DesignHeight = 720;
+    // Defines the tilemap to draw.
+    private Tilemap _tilemap;
+
+    // Defines the bounds of the room that the slime and bat are contained within.
+    private Rectangle _roomBounds;
     public Game1() : base("MyGame01 windows", DesignWidth, DesignHeight, false)
     {
 
@@ -41,15 +46,34 @@ public class Game1 : Core
         _bat.Scale = new Vector2(4.0f, 4.0f);
         _bat.CenterOrigin();
 
-        _gameLogic = new SnakeGame(DesignWidth, DesignHeight);
-        // _gameLogic.EatDistance = (int)(_slime.Width + _bat.Width) / 2;
+        // Create the tilemap from the XML configuration file.
+        _tilemap = Tilemap.FromFile(Content, "images/tilemap-definition.xml");
+        _tilemap.Scale = new Vector2(4.0f, 4.0f);
 
+        Rectangle screenBounds = GraphicsDevice.PresentationParameters.Bounds;
+
+        _roomBounds = new Rectangle(
+             (int)_tilemap.TileWidth,
+             (int)_tilemap.TileHeight,
+             screenBounds.Width - (int)_tilemap.TileWidth * 2,
+             screenBounds.Height - (int)_tilemap.TileHeight * 2
+         );
+
+        _gameLogic = new SnakeGame(DesignWidth, DesignHeight);
+
+        _gameLogic.RoomBounds = _roomBounds;
+        _gameLogic.Tilemap = _tilemap;
         _gameLogic.SlimeWidth = _slime.Width;
         _gameLogic.SlimeHeight = _slime.Height;
         _gameLogic.BatWidth = _bat.Width;
         _gameLogic.BatHeight = _bat.Height;
 
-        _gameLogic.Reset();
+        // Initial slime position will be the center tile of the tile map.
+        int centerRow = _tilemap.Rows / 2;
+        int centerColumn = _tilemap.Columns / 2;
+        Vector2 pos = new Vector2(centerColumn * _tilemap.TileWidth + _tilemap.TileWidth * 0.5f, centerRow * _tilemap.TileHeight + _tilemap.TileHeight * 0.5f);
+
+        _gameLogic.Reset(pos);
     }
 
     protected override void Update(GameTime gameTime)
@@ -101,6 +125,8 @@ public class Game1 : Core
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
         SpriteBatch.Begin(samplerState: SamplerState.PointClamp);
+        // Draw the tilemap.
+        _tilemap.Draw(SpriteBatch);
 
         _slime.Draw(SpriteBatch, _gameLogic.SlimePosition);
         

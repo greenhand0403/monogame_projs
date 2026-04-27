@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MyGameLib01;
+using MyGameLib01.Graphics;
 
 namespace SnakeGameLib;
 // SnakeGameLib     -> 类贪吃蛇玩法逻辑
@@ -22,31 +23,27 @@ public class SnakeGame
     public int WorldWidth { get; }
     public int WorldHeight { get; }
 
-    // 史莱姆与蝙蝠的碰撞半径，可按贴图尺寸调整
-    // public int EatDistance { get; set; } = 20;
-
+    public Rectangle RoomBounds { get; set; }
+    public Tilemap Tilemap { get; set; }
     // 边界控制
     public float SlimeWidth { get; set; } = 20f;
     public float SlimeHeight { get; set; } = 20f;
     public float BatWidth { get; set; } = 20f;
     public float BatHeight { get; set; } = 20f;
+
     public SnakeGame(int worldWidth, int worldHeight)
     {
         WorldWidth = worldWidth;
         WorldHeight = worldHeight;
-
-        Reset();
     }
 
-    public void Reset()
+    public void Reset(Vector2 pos)
     {
-        SlimePosition = new Vector2(WorldWidth / 2f, WorldHeight / 2f);
+        SlimePosition = pos;
+
         Score = 0;
 
         RespawnBat();
-
-        // Assign the initial random velocity to the bat.
-        AssignRandomBatDirection();
     }
 
     public void Update(GameTime gameTime, MoveCommand command)
@@ -73,38 +70,29 @@ public class SnakeGame
         // 史莱姆移动
         Vector2 newSlimePosition = SlimePosition + move * SLIME_MOVEMENT_SPEED * dt;
 
-        // 史莱姆碰撞检测，将位置限制在屏幕范围内
-        // Create a bounding rectangle for the screen.
-        Rectangle screenBounds = new Rectangle(
-            0,
-            0,
-            WorldWidth,
-            WorldHeight
-        );
-
         // Creating a bounding circle for the slime
         Circle slimeBounds = new Circle(
             (int)newSlimePosition.X,
             (int)newSlimePosition.Y,
-            (int)(SlimeWidth * 0.3f)
+            (int)(SlimeWidth * 0.5f)
         );
         // 史莱姆触碰边界停下来
-        if (slimeBounds.Left < screenBounds.Left)
+        if (slimeBounds.Left < RoomBounds.Left)
         {
-            newSlimePosition.X = SlimePosition.X;
+            newSlimePosition.X = RoomBounds.Left + slimeBounds.Radius;
         }
-        else if (slimeBounds.Right > screenBounds.Right)
+        else if (slimeBounds.Right > RoomBounds.Right)
         {
-            newSlimePosition.X = SlimePosition.X;
+            newSlimePosition.X = RoomBounds.Right - slimeBounds.Radius;
         }
 
-        if (slimeBounds.Top < screenBounds.Top)
+        if (slimeBounds.Top < RoomBounds.Top)
         {
-            newSlimePosition.Y = SlimePosition.Y;
+            newSlimePosition.Y = RoomBounds.Top + slimeBounds.Radius;
         }
-        else if (slimeBounds.Bottom > screenBounds.Bottom)
+        else if (slimeBounds.Bottom > RoomBounds.Bottom)
         {
-            newSlimePosition.Y = SlimePosition.Y;
+            newSlimePosition.Y = RoomBounds.Bottom - slimeBounds.Radius;
         }
 
         SlimePosition = newSlimePosition;
@@ -116,7 +104,7 @@ public class SnakeGame
         Circle batBounds = new Circle(
             (int)newBatPosition.X,
             (int)newBatPosition.Y,
-            (int)(BatWidth * 0.3f)
+            (int)(BatWidth * 0.5f)
         );
 
         // 蝙蝠触碰屏幕边界反射
@@ -125,26 +113,26 @@ public class SnakeGame
         // Use distance based checks to determine if the bat is within the
         // bounds of the game screen, and if it is outside that screen edge,
         // reflect it about the screen edge normal.
-        if (batBounds.Left < screenBounds.Left)
+        if (batBounds.Left < RoomBounds.Left)
         {
             normal.X = Vector2.UnitX.X;
-            newBatPosition.X = BatPosition.X;
+            newBatPosition.X = RoomBounds.Left + batBounds.Radius;
         }
-        else if (batBounds.Right > screenBounds.Right)
+        else if (batBounds.Right > RoomBounds.Right)
         {
             normal.X = -Vector2.UnitX.X;
-            newBatPosition.X = BatPosition.X;
+            newBatPosition.X = RoomBounds.Right - batBounds.Radius;
         }
 
-        if (batBounds.Top < screenBounds.Top)
+        if (batBounds.Top < RoomBounds.Top)
         {
             normal.Y = Vector2.UnitY.Y;
-            newBatPosition.Y = BatPosition.Y;
+            newBatPosition.Y = RoomBounds.Top + batBounds.Radius;
         }
-        else if (batBounds.Bottom > screenBounds.Bottom)
+        else if (batBounds.Bottom > RoomBounds.Bottom)
         {
             normal.Y = -Vector2.UnitY.Y;
-            newBatPosition.Y = BatPosition.Y;
+            newBatPosition.Y = RoomBounds.Bottom - batBounds.Radius;
         }
 
         // If the normal is anything but Vector2.Zero, this means the bat had
@@ -164,41 +152,21 @@ public class SnakeGame
             // System.Diagnostics.Debugger.Break();
             Score++;
             RespawnBat();
-            // Assign a new random velocity to the bat
-            AssignRandomBatDirection();
         }
-        
-        // if (Vector2.Distance(SlimePosition, BatPosition) <= EatDistance)
-        // {
-        //     Score++;
-        //     RespawnBat();
-        // }
     }
 
     private void RespawnBat()
     {
-        BatPosition = new Vector2(
-            _random.Next((int)(BatWidth * 0.5f), (int)(WorldWidth - BatWidth * 0.5f)),
-            _random.Next((int)(BatHeight * 0.5f), (int)(WorldHeight - BatHeight * 0.5f))
-        );
-        // 方便测试，让蝙蝠只在四个角落生成
-        // int rand = _random.Next(4);
-        // switch (rand)
-        // {
-        //     case 0:
-        //         BatPosition = new Vector2(BatHalfWidth, BatHalfHeight);
-        //         break;
-        //     case 1:
-        //         BatPosition = new Vector2(WorldWidth - BatHalfWidth, BatHalfHeight);
-        //         break;
-        //     case 2:
-        //         BatPosition = new Vector2(BatHalfWidth, WorldHeight - BatHalfHeight);
-        //         break;
-        //     case 3:
-        //         BatPosition = new Vector2(WorldWidth - BatHalfWidth, WorldHeight - BatHalfHeight);
-        //         break;
-        // }
+        // Choose a random row and column based on the total number of each
+        int column = Random.Shared.Next(1, Tilemap.Columns - 1);
+        int row = Random.Shared.Next(1, Tilemap.Rows - 1);
 
+        // Change the bat position by setting the x and y values equal to
+        // the column and row multiplied by the width and height.
+        BatPosition = new Vector2(column * BatWidth + Tilemap.TileWidth * 0.5f, row * BatHeight + Tilemap.TileHeight * 0.5f);
+
+        // Assign a new random velocity to the bat
+        AssignRandomBatDirection();
     }
 
     private void AssignRandomBatDirection()
