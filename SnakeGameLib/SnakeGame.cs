@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Media;
 using MyGameLib01;
 using MyGameLib01.Graphics;
 
@@ -25,6 +27,9 @@ public class SnakeGame
 
     public Rectangle RoomBounds { get; set; }
     public Tilemap Tilemap { get; set; }
+    public Song Theme { get; set; }
+    public SoundEffect BounceSoundEffect { get; set; }
+    public SoundEffect CollectSoundEffect { get; set; }
     // 边界控制
     public float SlimeWidth { get; set; } = 20f;
     public float SlimeHeight { get; set; } = 20f;
@@ -44,6 +49,18 @@ public class SnakeGame
         Score = 0;
 
         RespawnBat();
+
+        // Ensure media player is not already playing on device, if so, stop it
+        if (MediaPlayer.State == MediaState.Playing)
+        {
+            MediaPlayer.Stop();
+        }
+
+        // Play the background theme music.
+        MediaPlayer.Play(Theme);
+
+        // Set the theme music to repeat.
+        MediaPlayer.IsRepeating = true;
     }
 
     public void Update(GameTime gameTime, MoveCommand command)
@@ -142,6 +159,9 @@ public class SnakeGame
         {
             normal.Normalize();
             _batDirection = Vector2.Reflect(_batDirection, normal);
+
+            // Play the bounce sound effect
+            BounceSoundEffect.Play();
         }
 
         BatPosition = newBatPosition;
@@ -149,6 +169,9 @@ public class SnakeGame
         // 史莱姆吃到蝙蝠
         if (slimeBounds.Intersects(batBounds))
         {
+            // Play the collect sound effect
+            CollectSoundEffect.Play();
+            
             // System.Diagnostics.Debugger.Break();
             Score++;
             RespawnBat();

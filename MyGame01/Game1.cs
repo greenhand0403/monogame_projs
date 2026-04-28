@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
 using MyGameLib01;
 using MyGameLib01.Graphics;
 using MyGameLib01.Input;
@@ -60,6 +62,15 @@ public class Game1 : Core
          );
 
         _gameLogic = new SnakeGame(DesignWidth, DesignHeight);
+
+        // Load the bounce sound effect
+        _gameLogic.BounceSoundEffect = Content.Load<SoundEffect>("audio/bounce");
+
+        // Load the collect sound effect
+        _gameLogic.CollectSoundEffect = Content.Load<SoundEffect>("audio/collect");
+
+        // Load the background theme music
+        _gameLogic.Theme = Content.Load<Song>("audio/theme");
 
         _gameLogic.RoomBounds = _roomBounds;
         _gameLogic.Tilemap = _tilemap;
