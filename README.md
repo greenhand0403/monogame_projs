@@ -1,5 +1,13 @@
 just a learning project
 
+确保已安装模版
+
+dotnet tool install --global dotnet-mgcb-editor
+
+mgcb-editor --register
+
+dotnet new --install MonoGame.Templates.CSharp
+
 use monogame to create a new game project
 
 use `dotnet new mgdesktopgl` to create a new game project

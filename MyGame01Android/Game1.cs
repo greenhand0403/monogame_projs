@@ -23,9 +23,14 @@ public class Game1 : Core
     public const int DesignHeight = 720;
     // Defines the tilemap to draw.
     private Tilemap _tilemap;
+    // The background theme song
+    private Song _themeSong;
+    private SoundEffect _bounceSoundEffect;
+    private SoundEffect _collectSoundEffect;
 
     // Defines the bounds of the room that the slime and bat are contained within.
     private Rectangle _roomBounds;
+
     public Game1() : base("MyGame01Android Android", DesignWidth, DesignHeight, false)
     {
 
@@ -66,17 +71,18 @@ public class Game1 : Core
              DesignWidth - (int)_tilemap.TileWidth * 2,
              DesignHeight - (int)_tilemap.TileHeight * 2
          );
-
-        _gameLogic = new SnakeGame(DesignWidth, DesignHeight);
-        
         // Load the bounce sound effect
-        _gameLogic.BounceSoundEffect = Content.Load<SoundEffect>("audio/bounce");
+        _bounceSoundEffect = Content.Load<SoundEffect>("audio/bounce");
 
         // Load the collect sound effect
-        _gameLogic.CollectSoundEffect = Content.Load<SoundEffect>("audio/collect");
+        _collectSoundEffect = Content.Load<SoundEffect>("audio/collect");
 
         // Load the background theme music
-        _gameLogic.Theme = Content.Load<Song>("audio/theme");
+        _themeSong = Content.Load<Song>("audio/theme");
+
+        _gameLogic = new SnakeGame(DesignWidth, DesignHeight);
+        // Start playing the background music.
+        Audio.PlaySong(_themeSong);
 
         _gameLogic.RoomBounds = _roomBounds;
         _gameLogic.Tilemap = _tilemap;
@@ -112,7 +118,16 @@ public class Game1 : Core
         }
 
         _gameLogic.Update(gameTime, _currentMoveCommand);
+        
+        if (_gameLogic.DidCollectThisFrame)
+        {
+            Audio.PlaySoundEffect(_collectSoundEffect);
+        }
 
+        if (_gameLogic.DidBounceThisFrame)
+        {
+            Audio.PlaySoundEffect(_bounceSoundEffect);
+        }
         base.Update(gameTime);
     }
 

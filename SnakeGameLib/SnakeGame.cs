@@ -27,15 +27,13 @@ public class SnakeGame
 
     public Rectangle RoomBounds { get; set; }
     public Tilemap Tilemap { get; set; }
-    public Song Theme { get; set; }
-    public SoundEffect BounceSoundEffect { get; set; }
-    public SoundEffect CollectSoundEffect { get; set; }
     // 边界控制
     public float SlimeWidth { get; set; } = 20f;
     public float SlimeHeight { get; set; } = 20f;
     public float BatWidth { get; set; } = 20f;
     public float BatHeight { get; set; } = 20f;
-
+    public bool DidCollectThisFrame { get; private set; }
+    public bool DidBounceThisFrame { get; private set; }
     public SnakeGame(int worldWidth, int worldHeight)
     {
         WorldWidth = worldWidth;
@@ -49,22 +47,13 @@ public class SnakeGame
         Score = 0;
 
         RespawnBat();
-
-        // Ensure media player is not already playing on device, if so, stop it
-        if (MediaPlayer.State == MediaState.Playing)
-        {
-            MediaPlayer.Stop();
-        }
-
-        // Play the background theme music.
-        MediaPlayer.Play(Theme);
-
-        // Set the theme music to repeat.
-        MediaPlayer.IsRepeating = true;
     }
 
     public void Update(GameTime gameTime, MoveCommand command)
     {
+        DidCollectThisFrame = false;
+        DidBounceThisFrame = false;
+
         float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
         Vector2 move = Vector2.Zero;
 
@@ -161,7 +150,7 @@ public class SnakeGame
             _batDirection = Vector2.Reflect(_batDirection, normal);
 
             // Play the bounce sound effect
-            BounceSoundEffect.Play();
+            DidBounceThisFrame = true;
         }
 
         BatPosition = newBatPosition;
@@ -170,8 +159,8 @@ public class SnakeGame
         if (slimeBounds.Intersects(batBounds))
         {
             // Play the collect sound effect
-            CollectSoundEffect.Play();
-            
+            DidCollectThisFrame = true;
+
             // System.Diagnostics.Debugger.Break();
             Score++;
             RespawnBat();

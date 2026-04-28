@@ -1,12 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using MyGameLib01;
 using MyGameLib01.Graphics;
 using MyGameLib01.Input;
+using MyGameLib01.Audio;
 using SnakeGameLib;
+using Microsoft.Xna.Framework.Audio;
 
 namespace MyGame01;
 // MyGame01         -> Windows 可运行项目
@@ -22,7 +23,11 @@ public class Game1 : Core
     public const int DesignHeight = 720;
     // Defines the tilemap to draw.
     private Tilemap _tilemap;
-
+    
+    // The background theme song
+    private Song _themeSong;
+    private SoundEffect _bounceSoundEffect;
+    private SoundEffect _collectSoundEffect;
     // Defines the bounds of the room that the slime and bat are contained within.
     private Rectangle _roomBounds;
     public Game1() : base("MyGame01 windows", DesignWidth, DesignHeight, false)
@@ -61,16 +66,18 @@ public class Game1 : Core
              screenBounds.Height - (int)_tilemap.TileHeight * 2
          );
 
-        _gameLogic = new SnakeGame(DesignWidth, DesignHeight);
-
         // Load the bounce sound effect
-        _gameLogic.BounceSoundEffect = Content.Load<SoundEffect>("audio/bounce");
+        _bounceSoundEffect = Content.Load<SoundEffect>("audio/bounce");
 
         // Load the collect sound effect
-        _gameLogic.CollectSoundEffect = Content.Load<SoundEffect>("audio/collect");
+        _collectSoundEffect = Content.Load<SoundEffect>("audio/collect");
 
         // Load the background theme music
-        _gameLogic.Theme = Content.Load<Song>("audio/theme");
+        _themeSong = Content.Load<Song>("audio/theme");
+
+        _gameLogic = new SnakeGame(DesignWidth, DesignHeight);
+        // Start playing the background music.
+        Audio.PlaySong(_themeSong);
 
         _gameLogic.RoomBounds = _roomBounds;
         _gameLogic.Tilemap = _tilemap;
@@ -103,14 +110,42 @@ public class Game1 : Core
         }
 
         _gameLogic.Update(gameTime, _currentMoveCommand);
+        if (_gameLogic.DidCollectThisFrame)
+        {
+            Audio.PlaySoundEffect(_collectSoundEffect);
+        }
 
+        if (_gameLogic.DidBounceThisFrame)
+        {
+            Audio.PlaySoundEffect(_bounceSoundEffect);
+        }
         base.Update(gameTime);
     }
 
     private MoveCommand ReadKeyboardMoveCommand()
     {
         GamePadInfo gamePadOne = Input.GamePads[(int)PlayerIndex.One];
-        
+
+        // If the M key is pressed, toggle mute state for audio.
+        if (Input.Keyboard.WasKeyJustPressed(Keys.M))
+        {
+            Audio.ToggleMute();
+        }
+
+        if (Input.Keyboard.WasKeyJustPressed(Keys.OemPlus) ||
+    Input.Keyboard.WasKeyJustPressed(Keys.Add))
+        {
+            Audio.SongVolume += 0.1f;
+            Audio.SoundEffectVolume += 0.1f;
+        }
+
+        if (Input.Keyboard.WasKeyJustPressed(Keys.OemMinus) ||
+            Input.Keyboard.WasKeyJustPressed(Keys.Subtract))
+        {
+            Audio.SongVolume -= 0.1f;
+            Audio.SoundEffectVolume -= 0.1f;
+        }
+
         if (Input.Keyboard.IsKeyDown(Keys.W) || Input.Keyboard.IsKeyDown(Keys.Up)|| gamePadOne.IsButtonDown(Buttons.DPadUp))
             return MoveCommand.Up;
 
