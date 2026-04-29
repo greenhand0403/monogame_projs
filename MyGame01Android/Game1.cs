@@ -30,7 +30,14 @@ public class Game1 : Core
 
     // Defines the bounds of the room that the slime and bat are contained within.
     private Rectangle _roomBounds;
+    // The SpriteFont Description used to draw text.
+    private SpriteFont _font;
 
+    // Defines the position to draw the score text at.
+    private Vector2 _scoreTextPosition;
+
+    // Defines the origin used when drawing the score text.
+    private Vector2 _scoreTextOrigin;
     public Game1() : base("MyGame01Android Android", DesignWidth, DesignHeight, false)
     {
 
@@ -79,10 +86,20 @@ public class Game1 : Core
 
         // Load the background theme music
         _themeSong = Content.Load<Song>("audio/theme");
+        // Load the font
+        _font = Content.Load<SpriteFont>("fonts/04B_30");
 
         _gameLogic = new SnakeGame(DesignWidth, DesignHeight);
         // Start playing the background music.
         Audio.PlaySong(_themeSong);
+
+        // Set the position of the score text to align to the left edge of the
+        // room bounds, and to vertically be at the center of the first tile.
+        _scoreTextPosition = new Vector2(_roomBounds.Left, _tilemap.TileHeight * 0.5f);
+
+        // Set the origin of the text so it is left-centered.
+        float scoreTextYOrigin = _font.MeasureString("Score").Y * 0.5f;
+        _scoreTextOrigin = new Vector2(0, scoreTextYOrigin);
 
         _gameLogic.RoomBounds = _roomBounds;
         _gameLogic.Tilemap = _tilemap;
@@ -173,6 +190,19 @@ public class Game1 : Core
         _slime.Draw(SpriteBatch, _gameLogic.SlimePosition);
 
         _bat.Draw(SpriteBatch, _gameLogic.BatPosition);
+
+        // Draw the score
+        SpriteBatch.DrawString(
+            _font,              // spriteFont
+            $"Score: {_gameLogic.Score}", // text
+            _scoreTextPosition, // position
+            Color.White,        // color
+            0.0f,               // rotation
+            _scoreTextOrigin,   // origin
+            1.0f,               // scale
+            SpriteEffects.None, // effects
+            0.0f                // layerDepth
+        );
 
         SpriteBatch.End();
 

@@ -24,4 +24,8 @@ dotnet build -t:InstallAndroidDependencies -f net9.0-android "-p:AndroidSdkDirec
 
 此时在release目录下会生成安装包
 
-如果持续报错，就执行`dotnet tool restore`
+如果持续报错，就执行 `dotnet tool restore` 或者重启电脑
+
+最后，这是一个偶发性的错误，怀疑是中间的过程资源被占用
+
+可以手动删除掉 MyGame01Android\Content 目录下的 bin 和 obj ！！！
