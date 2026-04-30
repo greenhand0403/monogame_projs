@@ -8,37 +8,19 @@ using MyGameLib01;
 using MyGameLib01.Graphics;
 using SnakeGameLib;
 using MyGame01Android.Scenes;
+using MyGameLib01.Input;
+using MyGameLib01.Scenes;
 
 namespace MyGame01Android;
 public class Game1 : Core
 {
-    // Defines the slime animated sprite.
-    private AnimatedSprite _slime;
-
-    // Defines the bat animated sprite.
-    private AnimatedSprite _bat;
-    private SnakeGame _gameLogic = null!;
-
-    private MoveCommand _currentMoveCommand = MoveCommand.None;
-    public const int DesignWidth = 1280;
-    public const int DesignHeight = 720;
-    // Defines the tilemap to draw.
-    public Tilemap _tilemap;
     // The background theme song
     private Song _themeSong;
-    private SoundEffect _bounceSoundEffect;
-    private SoundEffect _collectSoundEffect;
 
-    // Defines the bounds of the room that the slime and bat are contained within.
-    public Rectangle _roomBounds;
-    // The SpriteFont Description used to draw text.
-    private SpriteFont _font;
+    private Scene _currentScene;
+    public const int DesignWidth = 1280;
+    public const int DesignHeight = 720;
 
-    // Defines the position to draw the score text at.
-    private Vector2 _scoreTextPosition;
-
-    // Defines the origin used when drawing the score text.
-    private Vector2 _scoreTextOrigin;
     public Game1() : base("MyGame01Android Android", DesignWidth, DesignHeight, false)
     {
 
@@ -52,177 +34,28 @@ public class Game1 : Core
         GestureType.HorizontalDrag |
         GestureType.VerticalDrag |
         GestureType.DragComplete;
+
+        ScaleMatrix = GetScaleMatrix();
+        InverseScaleMatrix = Matrix.Invert(ScaleMatrix);
+
+        _currentScene = new TitleScene();
+        ChangeScene(_currentScene);
     }
 
     protected override void LoadContent()
     {
-
-        // Create the texture atlas from the XML configuration file
-        TextureAtlas atlas = TextureAtlas.FromFile(Content, "images/atlas-definition.xml");
-
-        // Create the slime animated sprite from the atlas.
-        _slime = atlas.CreateAnimatedSprite("slime-animation");
-        _slime.Scale = new Vector2(4.0f, 4.0f);
-        _slime.CenterOrigin();
-        // Create the bat animated sprite from the atlas.
-        _bat = atlas.CreateAnimatedSprite("bat-animation");
-        _bat.Scale = new Vector2(4.0f, 4.0f);
-        _bat.CenterOrigin();
-
-        // Create the tilemap from the XML configuration file.
-        _tilemap = Tilemap.FromFile(Content, "images/tilemap-definition.xml");
-        _tilemap.Scale = new Vector2(4.0f, 4.0f);
-
-        _roomBounds = new Rectangle(
-             (int)_tilemap.TileWidth,
-             (int)_tilemap.TileHeight,
-             DesignWidth - (int)_tilemap.TileWidth * 2,
-             DesignHeight - (int)_tilemap.TileHeight * 2
-         );
-        // Load the bounce sound effect
-        _bounceSoundEffect = Content.Load<SoundEffect>("audio/bounce");
-
-        // Load the collect sound effect
-        _collectSoundEffect = Content.Load<SoundEffect>("audio/collect");
-
         // Load the background theme music
         _themeSong = Content.Load<Song>("audio/theme");
-        // Load the font
-        _font = Content.Load<SpriteFont>("fonts/04B_30");
-
-        _gameLogic = new SnakeGame(DesignWidth, DesignHeight);
         // Start playing the background music.
         Audio.PlaySong(_themeSong);
-
-        ChangeScene(new TitleScene());
-
-        // Set the position of the score text to align to the left edge of the
-        // room bounds, and to vertically be at the center of the first tile.
-        _scoreTextPosition = new Vector2(_roomBounds.Left, _tilemap.TileHeight * 0.5f);
-
-        // Set the origin of the text so it is left-centered.
-        float scoreTextYOrigin = _font.MeasureString("Score").Y * 0.5f;
-        _scoreTextOrigin = new Vector2(0, scoreTextYOrigin);
-
-        _gameLogic.RoomBounds = _roomBounds;
-        _gameLogic.Tilemap = _tilemap;
-
-        _gameLogic.SlimeWidth = _slime.Width;
-        _gameLogic.SlimeHeight = _slime.Height;
-        _gameLogic.BatWidth = _bat.Width;
-        _gameLogic.BatHeight = _bat.Height;
-
-        StartNewGame();
-    }
-    public void StartNewGame()
-    {
-        _currentMoveCommand = MoveCommand.None;
-
-        int centerRow = _tilemap.Rows / 2;
-        int centerColumn = _tilemap.Columns / 2;
-
-        Vector2 pos = new Vector2(
-            centerColumn * _tilemap.TileWidth + _tilemap.TileWidth * 0.5f,
-            centerRow * _tilemap.TileHeight + _tilemap.TileHeight * 0.5f
-        );
-
-        _gameLogic.Reset(pos);
     }
     protected override void Update(GameTime gameTime)
     {
         base.Update(gameTime);
     }
-    public void UpdateGameWorld(GameTime gameTime)
-    {
-        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-            Exit();
-
-        // Update the slime animated sprite.
-        _slime.Update(gameTime);
-
-        // Update the bat animated sprite.
-        _bat.Update(gameTime);
-
-        MoveCommand newCommand = ReadTouchMoveCommand();
-        if (newCommand != MoveCommand.None && !IsOpposite(_currentMoveCommand, newCommand))
-        {
-            _currentMoveCommand = newCommand;
-        }
-
-        _gameLogic.Update(gameTime, _currentMoveCommand);
-
-        if (_gameLogic.DidCollectThisFrame)
-        {
-            Audio.PlaySoundEffect(_collectSoundEffect);
-        }
-
-        if (_gameLogic.DidBounceThisFrame)
-        {
-            Audio.PlaySoundEffect(_bounceSoundEffect);
-        }
-    }
-    private MoveCommand ReadTouchMoveCommand()
-    {
-        while (TouchPanel.IsGestureAvailable)
-        {
-            GestureSample gesture = TouchPanel.ReadGesture();
-
-            if (gesture.GestureType == GestureType.HorizontalDrag)
-            {
-                if (gesture.Delta.X > 0)
-                    return MoveCommand.Right;
-                if (gesture.Delta.X < 0)
-                    return MoveCommand.Left;
-            }
-            else if (gesture.GestureType == GestureType.VerticalDrag)
-            {
-                if (gesture.Delta.Y > 0)
-                    return MoveCommand.Down;
-                if (gesture.Delta.Y < 0)
-                    return MoveCommand.Up;
-            }
-        }
-
-        return MoveCommand.None;
-    }
-    private static bool IsOpposite(MoveCommand a, MoveCommand b)
-    {
-        return (a == MoveCommand.Up && b == MoveCommand.Down) ||
-               (a == MoveCommand.Down && b == MoveCommand.Up) ||
-               (a == MoveCommand.Left && b == MoveCommand.Right) ||
-               (a == MoveCommand.Right && b == MoveCommand.Left);
-    }
     protected override void Draw(GameTime gameTime)
     {
         base.Draw(gameTime);
-    }
-    public void DrawGameWorld(GameTime gameTime)
-    {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        SpriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: GetScaleMatrix());
-        // Draw the tilemap.
-        _tilemap.Draw(SpriteBatch);
-
-        _slime.Draw(SpriteBatch, _gameLogic.SlimePosition);
-
-        _bat.Draw(SpriteBatch, _gameLogic.BatPosition);
-
-        // Draw the score
-        SpriteBatch.DrawString(
-            _font,              // spriteFont
-            $"Score: {_gameLogic.Score}", // text
-            _scoreTextPosition, // position
-            Color.White,        // color
-            0.0f,               // rotation
-            _scoreTextOrigin,   // origin
-            1.0f,               // scale
-            SpriteEffects.None, // effects
-            0.0f                // layerDepth
-        );
-
-        SpriteBatch.End();
-
     }
     public Matrix GetScaleMatrix()
     {

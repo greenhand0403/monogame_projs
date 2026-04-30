@@ -1,28 +1,85 @@
 using System;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Input.Touch;
 using MyGameLib01;
+using MyGameLib01.Graphics;
 using MyGameLib01.Input;
 using MyGameLib01.Scenes;
+using SnakeGameLib;
 
 namespace MyGame01Android.Scenes;
 
 public class GameScene : Scene
-{
+{// Defines the slime animated sprite.
+    private AnimatedSprite _slime;
+
+    // Defines the bat animated sprite.
+    private AnimatedSprite _bat;
+    // Defines the tilemap to draw.
+    public Tilemap _tilemap;
+    // Defines the bounds of the room that the slime and bat are contained within.
+    public Rectangle _roomBounds;
+    private SoundEffect _bounceSoundEffect;
+    private SoundEffect _collectSoundEffect;
+
+    // The SpriteFont Description used to draw text.
+    private SpriteFont _font;
+    // Defines the position to draw the score text at.
+    private Vector2 _scoreTextPosition;
+
+    // Defines the origin used when drawing the score text.
+    private Vector2 _scoreTextOrigin;
+    private SnakeGame _gameLogic = null!;
+    private MoveCommand _currentMoveCommand = MoveCommand.None;
+
     private Rectangle _backButtonBounds;
     private const string BACK_TEXT = "Back";
     private Vector2 _backTextPos;
-    // The font to use to render normal text.
-    public SpriteFont _font;
+    
     public override void Initialize()
     {
         base.Initialize();
+    }
+    public override void LoadContent()
+    {
+        base.LoadContent();
+        // Create the texture atlas from the XML configuration file
+        TextureAtlas atlas = TextureAtlas.FromFile(Content, "images/atlas-definition.xml");
+
+        // Create the slime animated sprite from the atlas.
+        _slime = atlas.CreateAnimatedSprite("slime-animation");
+        _slime.Scale = new Vector2(4.0f, 4.0f);
+        _slime.CenterOrigin();
+        // Create the bat animated sprite from the atlas.
+        _bat = atlas.CreateAnimatedSprite("bat-animation");
+        _bat.Scale = new Vector2(4.0f, 4.0f);
+        _bat.CenterOrigin();
+
+        // Create the tilemap from the XML configuration file.
+        _tilemap = Tilemap.FromFile(Content, "images/tilemap-definition.xml");
+        _tilemap.Scale = new Vector2(4.0f, 4.0f);
+
+        _roomBounds = new Rectangle(
+             (int)_tilemap.TileWidth,
+             (int)_tilemap.TileHeight,
+             Game1.DesignWidth - (int)_tilemap.TileWidth * 2,
+             Game1.DesignHeight - (int)_tilemap.TileHeight * 2
+         );
+        // Load the bounce sound effect
+        _bounceSoundEffect = Content.Load<SoundEffect>("audio/bounce");
+
+        // Load the collect sound effect
+        _collectSoundEffect = Content.Load<SoundEffect>("audio/collect");
+
+        // Load the font for the standard text.
+        _font = Content.Load<SpriteFont>("fonts/04B_30");
 
         Vector2 size = _font.MeasureString(BACK_TEXT);
         // 左上角原点，故需要减去高度的一半，才能居中显示
-        _backTextPos = new Vector2(((Game1)Core.Instance)._roomBounds.Right - size.X, ((Game1)Core.Instance)._tilemap.TileHeight * 0.5f - size.Y * 0.5f);
+        _backTextPos = new Vector2(_roomBounds.Right - size.X, _tilemap.TileHeight * 0.5f - size.Y * 0.5f);
 
         _backButtonBounds = new Rectangle(
             (int)_backTextPos.X,
@@ -31,44 +88,121 @@ public class GameScene : Scene
             (int)size.Y
         );
 
-        ((Game1)Core.Instance).StartNewGame();
-    }
-    public override void LoadContent()
-    {
-        base.LoadContent();
+        _gameLogic = new SnakeGame(Game1.DesignWidth, Game1.DesignHeight);
 
-        // Load the font for the standard text.
-        _font = Core.Instance.Content.Load<SpriteFont>("fonts/04B_30");
+        // Set the position of the score text to align to the left edge of the
+        // room bounds, and to vertically be at the center of the first tile.
+        _scoreTextPosition = new Vector2(_roomBounds.Left, _tilemap.TileHeight * 0.5f);
 
+        // Set the origin of the text so it is left-centered.
+        float scoreTextYOrigin = _font.MeasureString("Score").Y * 0.5f;
+        _scoreTextOrigin = new Vector2(0, scoreTextYOrigin);
+
+        _gameLogic.RoomBounds = _roomBounds;
+        _gameLogic.Tilemap = _tilemap;
+
+        _gameLogic.SlimeWidth = _slime.Width;
+        _gameLogic.SlimeHeight = _slime.Height;
+        _gameLogic.BatWidth = _bat.Width;
+        _gameLogic.BatHeight = _bat.Height;
+
+        _currentMoveCommand = MoveCommand.None;
+
+        int centerRow = _tilemap.Rows / 2;
+        int centerColumn = _tilemap.Columns / 2;
+
+        Vector2 pos = new Vector2(
+            centerColumn * _tilemap.TileWidth + _tilemap.TileWidth * 0.5f,
+            centerRow * _tilemap.TileHeight + _tilemap.TileHeight * 0.5f
+        );
+
+        _gameLogic.Reset(pos);
     }
     public override void Update(GameTime gameTime)
     {
-        TouchCollection touches = TouchPanel.GetState();
-
-        foreach (TouchLocation touch in touches)
+        if (Core.Input.Touch.WasJustPressedIn(_backButtonBounds))
         {
-            if (touch.State == TouchLocationState.Pressed)
-            {
-                Matrix scaleMatrix = ((Game1)Core.Instance).GetScaleMatrix();
-                Matrix inverseMatrix = Matrix.Invert(scaleMatrix);
-
-                Vector2 worldPos = Vector2.Transform(touch.Position, inverseMatrix);
-                if (_backButtonBounds.Contains(worldPos))
-                {
-                    Core.ChangeScene(new TitleScene());
-                    return;
-                }
-            }
+            Core.ChangeScene(new TitleScene());
+            return;
         }
 
-        ((Game1)Core.Instance).UpdateGameWorld(gameTime);
+        // Update the slime animated sprite.
+        _slime.Update(gameTime);
+
+        // Update the bat animated sprite.
+        _bat.Update(gameTime);
+
+        MoveCommand newCommand = ReadTouchMoveCommand();
+        if (newCommand != MoveCommand.None && !IsOpposite(_currentMoveCommand, newCommand))
+        {
+            _currentMoveCommand = newCommand;
+        }
+
+        _gameLogic.Update(gameTime, _currentMoveCommand);
+
+        if (_gameLogic.DidCollectThisFrame)
+        {
+            Core.Audio.PlaySoundEffect(_collectSoundEffect);
+        }
+
+        if (_gameLogic.DidBounceThisFrame)
+        {
+            Core.Audio.PlaySoundEffect(_bounceSoundEffect);
+        }
+    }
+
+    private MoveCommand ReadTouchMoveCommand()
+    {
+        switch (Core.Input.Touch.Swipe)
+        {
+            case SwipeDirection.Up:
+                return MoveCommand.Up;
+
+            case SwipeDirection.Down:
+                return MoveCommand.Down;
+
+            case SwipeDirection.Left:
+                return MoveCommand.Left;
+
+            case SwipeDirection.Right:
+                return MoveCommand.Right;
+
+            default:
+                return MoveCommand.None;
+        }
+    }
+    private static bool IsOpposite(MoveCommand a, MoveCommand b)
+    {
+        return (a == MoveCommand.Up && b == MoveCommand.Down) ||
+               (a == MoveCommand.Down && b == MoveCommand.Up) ||
+               (a == MoveCommand.Left && b == MoveCommand.Right) ||
+               (a == MoveCommand.Right && b == MoveCommand.Left);
     }
     public override void Draw(GameTime gameTime)
     {
-        ((Game1)Core.Instance).DrawGameWorld(gameTime);
+        Core.Instance.GraphicsDevice.Clear(Color.CornflowerBlue);
 
-        // Begin the sprite batch to prepare for rendering.
-        Core.SpriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: ((Game1)Core.Instance).GetScaleMatrix());
+        Core.SpriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: Core.ScaleMatrix);
+        // Draw the tilemap.
+        _tilemap.Draw(Core.SpriteBatch);
+
+        _slime.Draw(Core.SpriteBatch, _gameLogic.SlimePosition);
+
+        _bat.Draw(Core.SpriteBatch, _gameLogic.BatPosition);
+
+        // Draw the score
+        Core.SpriteBatch.DrawString(
+            _font,              // spriteFont
+            $"Score: {_gameLogic.Score}", // text
+            _scoreTextPosition, // position
+            Color.White,        // color
+            0.0f,               // rotation
+            _scoreTextOrigin,   // origin
+            1.0f,               // scale
+            SpriteEffects.None, // effects
+            0.0f                // layerDepth
+        );
+        
         Core.SpriteBatch.DrawString(
             _font,
             BACK_TEXT,

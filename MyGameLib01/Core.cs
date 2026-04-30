@@ -49,6 +49,8 @@ public class Core : Game
     /// Gets a reference to the audio control system.
     /// </summary>
     public static AudioController Audio { get; private set; }
+    public static Matrix ScaleMatrix { get; set; } = Matrix.Identity;
+    public static Matrix InverseScaleMatrix { get; set; } = Matrix.Identity;
     /// <summary>
     /// Creates a new Core instance.
     /// </summary>
@@ -188,5 +190,9 @@ public class Core : Game
         {
             s_activeScene.Initialize();
         }
+    }
+    public static Vector2 ScreenToWorld(Vector2 screenPosition)
+    {
+        return Vector2.Transform(screenPosition, InverseScaleMatrix);
     }
 }

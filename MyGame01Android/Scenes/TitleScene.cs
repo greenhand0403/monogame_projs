@@ -43,10 +43,6 @@ public class TitleScene : Scene
         // LoadContent is called during base.Initialize().
         base.Initialize();
 
-        // While on the title screen, we can enable exit on escape so the player
-        // can close the game by pressing the escape key.
-        Core.ExitOnEscape = true;
-
         // Set the position and origin for the Dungeon text.
         Vector2 size = _font5x.MeasureString(DUNGEON_TEXT);
         _dungeonTextPos = new Vector2(640, 100);
@@ -79,22 +75,9 @@ public class TitleScene : Scene
     }
     public override void Update(GameTime gameTime)
     {
-        TouchCollection touches = TouchPanel.GetState();
-
-        foreach (TouchLocation touch in touches)
+        if (Core.Input.Touch.WasJustPressedIn(_pressEnterBounds))
         {
-            if (touch.State == TouchLocationState.Pressed)
-            {
-                Matrix scaleMatrix = ((Game1)Core.Instance).GetScaleMatrix();
-                Matrix inverseMatrix = Matrix.Invert(scaleMatrix);
-
-                Vector2 worldPos = Vector2.Transform(touch.Position, inverseMatrix);
-                if (_pressEnterBounds.Contains(worldPos))
-                {
-                    Core.ChangeScene(new GameScene());
-                    return;
-                }
-            }
+            Core.ChangeScene(new GameScene());
         }
     }
     public override void Draw(GameTime gameTime)
@@ -102,7 +85,7 @@ public class TitleScene : Scene
         Core.Instance.GraphicsDevice.Clear(new Color(32, 40, 78, 255));
 
         // Begin the sprite batch to prepare for rendering.
-        Core.SpriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: ((Game1)Core.Instance).GetScaleMatrix());
+        Core.SpriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: Core.ScaleMatrix);
 
         // The color to use for the drop shadow text.
         Color dropShadowColor = Color.Black * 0.5f;
