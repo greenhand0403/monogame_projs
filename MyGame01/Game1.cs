@@ -8,6 +8,7 @@ using MyGameLib01.Input;
 using MyGameLib01.Audio;
 using SnakeGameLib;
 using Microsoft.Xna.Framework.Audio;
+using MyGame01.Scenes;
 
 namespace MyGame01;
 // MyGame01         -> Windows 可运行项目
@@ -89,6 +90,8 @@ public class Game1 : Core
         // Start playing the background music.
         Audio.PlaySong(_themeSong);
 
+        ChangeScene(new TitleScene());
+
         // Set the position of the score text to align to the left edge of the
         // room bounds, and to vertically be at the center of the first tile.
         _scoreTextPosition = new Vector2(_roomBounds.Left, _tilemap.TileHeight * 0.5f);
@@ -105,15 +108,27 @@ public class Game1 : Core
         _gameLogic.BatWidth = _bat.Width;
         _gameLogic.BatHeight = _bat.Height;
 
-        // Initial slime position will be the center tile of the tile map.
+        StartNewGame();
+    }
+    public void StartNewGame()
+    {
+        _currentMoveCommand = MoveCommand.None;
+
         int centerRow = _tilemap.Rows / 2;
         int centerColumn = _tilemap.Columns / 2;
-        Vector2 pos = new Vector2(centerColumn * _tilemap.TileWidth + _tilemap.TileWidth * 0.5f, centerRow * _tilemap.TileHeight + _tilemap.TileHeight * 0.5f);
+
+        Vector2 pos = new Vector2(
+            centerColumn * _tilemap.TileWidth + _tilemap.TileWidth * 0.5f,
+            centerRow * _tilemap.TileHeight + _tilemap.TileHeight * 0.5f
+        );
 
         _gameLogic.Reset(pos);
     }
-
     protected override void Update(GameTime gameTime)
+    {
+        base.Update(gameTime);
+    }
+    public void UpdateGameWorld(GameTime gameTime)
     {
         // Update the slime animated sprite.
         _slime.Update(gameTime);
@@ -128,6 +143,7 @@ public class Game1 : Core
         }
 
         _gameLogic.Update(gameTime, _currentMoveCommand);
+        
         if (_gameLogic.DidCollectThisFrame)
         {
             Audio.PlaySoundEffect(_collectSoundEffect);
@@ -137,9 +153,7 @@ public class Game1 : Core
         {
             Audio.PlaySoundEffect(_bounceSoundEffect);
         }
-        base.Update(gameTime);
     }
-
     private MoveCommand ReadKeyboardMoveCommand()
     {
         GamePadInfo gamePadOne = Input.GamePads[(int)PlayerIndex.One];
@@ -187,32 +201,30 @@ public class Game1 : Core
     }
     protected override void Draw(GameTime gameTime)
     {
+        base.Draw(gameTime);
+    }
+    public void DrawGameWorld(GameTime gameTime)
+    {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
         SpriteBatch.Begin(samplerState: SamplerState.PointClamp);
-        // Draw the tilemap.
+
         _tilemap.Draw(SpriteBatch);
-
         _slime.Draw(SpriteBatch, _gameLogic.SlimePosition);
-
         _bat.Draw(SpriteBatch, _gameLogic.BatPosition);
-        
-        // Draw the score
+
         SpriteBatch.DrawString(
-            _font,              // spriteFont
-            $"Score: {_gameLogic.Score}", // text
-            _scoreTextPosition, // position
-            Color.White,        // color
-            0.0f,               // rotation
-            _scoreTextOrigin,   // origin
-            1.0f,               // scale
-            SpriteEffects.None, // effects
-            0.0f                // layerDepth
+            _font,
+            $"Score: {_gameLogic.Score}",
+            _scoreTextPosition,
+            Color.White,
+            0.0f,
+            _scoreTextOrigin,
+            1.0f,
+            SpriteEffects.None,
+            0.0f
         );
 
         SpriteBatch.End();
-
-        base.Draw(gameTime);
     }
-    
 }

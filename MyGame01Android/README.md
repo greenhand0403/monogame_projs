@@ -28,4 +28,12 @@ dotnet build -t:InstallAndroidDependencies -f net9.0-android "-p:AndroidSdkDirec
 
 最后，这是一个偶发性的错误，怀疑是中间的过程资源被占用
 
-可以手动删除掉 MyGame01Android\Content 目录下的 bin 和 obj ！！！
+可以手动删除掉 MyGame01Android\Content 目录下的 obj 目录
+
+最新进展：现在单进程构建APP，必定成功
+
+powershell 执行
+`dotnet build MyGame01Android.csproj -f net9.0-android -m:1 /nr:false /p:BuildInParallel=false`
+
+gitbash 执行
+`dotnet build MyGame01Android.csproj -c Release -f net9.0-android -p:AndroidBuildApplicationPackage=true -m:1 -nr:false -p:BuildInParallel=false`

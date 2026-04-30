@@ -15,4 +15,7 @@
     <ProjectReference Include="..\MyGameLib01\MyGameLib01.csproj" />
     <ProjectReference Include="..\SnakeGameLib\SnakeGameLib.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Scenes\" />
+  </ItemGroup>
 </Project>

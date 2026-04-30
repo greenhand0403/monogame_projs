@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Media;
 using MyGameLib01;
 using MyGameLib01.Graphics;
 using SnakeGameLib;
+using MyGame01Android.Scenes;
 
 namespace MyGame01Android;
 public class Game1 : Core
@@ -22,14 +23,14 @@ public class Game1 : Core
     public const int DesignWidth = 1280;
     public const int DesignHeight = 720;
     // Defines the tilemap to draw.
-    private Tilemap _tilemap;
+    public Tilemap _tilemap;
     // The background theme song
     private Song _themeSong;
     private SoundEffect _bounceSoundEffect;
     private SoundEffect _collectSoundEffect;
 
     // Defines the bounds of the room that the slime and bat are contained within.
-    private Rectangle _roomBounds;
+    public Rectangle _roomBounds;
     // The SpriteFont Description used to draw text.
     private SpriteFont _font;
 
@@ -93,6 +94,8 @@ public class Game1 : Core
         // Start playing the background music.
         Audio.PlaySong(_themeSong);
 
+        ChangeScene(new TitleScene());
+
         // Set the position of the score text to align to the left edge of the
         // room bounds, and to vertically be at the center of the first tile.
         _scoreTextPosition = new Vector2(_roomBounds.Left, _tilemap.TileHeight * 0.5f);
@@ -109,15 +112,27 @@ public class Game1 : Core
         _gameLogic.BatWidth = _bat.Width;
         _gameLogic.BatHeight = _bat.Height;
 
-        // Initial slime position will be the center tile of the tile map.
+        StartNewGame();
+    }
+    public void StartNewGame()
+    {
+        _currentMoveCommand = MoveCommand.None;
+
         int centerRow = _tilemap.Rows / 2;
         int centerColumn = _tilemap.Columns / 2;
-        Vector2 pos = new Vector2(centerColumn * _tilemap.TileWidth + _tilemap.TileWidth * 0.5f, centerRow * _tilemap.TileHeight + _tilemap.TileHeight * 0.5f);
+
+        Vector2 pos = new Vector2(
+            centerColumn * _tilemap.TileWidth + _tilemap.TileWidth * 0.5f,
+            centerRow * _tilemap.TileHeight + _tilemap.TileHeight * 0.5f
+        );
 
         _gameLogic.Reset(pos);
     }
-
     protected override void Update(GameTime gameTime)
+    {
+        base.Update(gameTime);
+    }
+    public void UpdateGameWorld(GameTime gameTime)
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
@@ -135,7 +150,7 @@ public class Game1 : Core
         }
 
         _gameLogic.Update(gameTime, _currentMoveCommand);
-        
+
         if (_gameLogic.DidCollectThisFrame)
         {
             Audio.PlaySoundEffect(_collectSoundEffect);
@@ -145,9 +160,7 @@ public class Game1 : Core
         {
             Audio.PlaySoundEffect(_bounceSoundEffect);
         }
-        base.Update(gameTime);
     }
-
     private MoveCommand ReadTouchMoveCommand()
     {
         while (TouchPanel.IsGestureAvailable)
@@ -181,6 +194,10 @@ public class Game1 : Core
     }
     protected override void Draw(GameTime gameTime)
     {
+        base.Draw(gameTime);
+    }
+    public void DrawGameWorld(GameTime gameTime)
+    {
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
         SpriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: GetScaleMatrix());
@@ -206,9 +223,8 @@ public class Game1 : Core
 
         SpriteBatch.End();
 
-        base.Draw(gameTime);
     }
-    private Matrix GetScaleMatrix()
+    public Matrix GetScaleMatrix()
     {
         float viewportWidth = GraphicsDevice.Viewport.Width;
         float viewportHeight = GraphicsDevice.Viewport.Height;

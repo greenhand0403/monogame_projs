@@ -10,5 +10,6 @@
   <ItemGroup>
     <Folder Include="Audio\" />
     <Folder Include="Input\" />
+    <Folder Include="Scenes\" />
   </ItemGroup>
 </Project>
