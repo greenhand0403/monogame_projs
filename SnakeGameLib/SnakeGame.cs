@@ -11,8 +11,6 @@ namespace SnakeGameLib;
 // SnakeGameLib     -> 类贪吃蛇玩法逻辑
 public class SnakeGame
 {
-    private readonly Random _random = new();
-
     public Vector2 SlimePosition { get; private set; }
     public Vector2 BatPosition { get; private set; }
     // Tracks the velocity of the bat.

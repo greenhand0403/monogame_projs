@@ -9,222 +9,41 @@ using MyGameLib01.Audio;
 using SnakeGameLib;
 using Microsoft.Xna.Framework.Audio;
 using MyGame01.Scenes;
+using MyGameLib01.Scenes;
 
 namespace MyGame01;
 // MyGame01         -> Windows 可运行项目
 public class Game1 : Core
 {
-    // Defines the slime animated sprite.
-    private AnimatedSprite _slime;
-    // Defines the bat animated sprite.
-    private AnimatedSprite _bat;
-    private SnakeGame _gameLogic = null!;
-    private MoveCommand _currentMoveCommand = MoveCommand.None;
-    public const int DesignWidth = 1280;
-    public const int DesignHeight = 720;
-    // Defines the tilemap to draw.
-    private Tilemap _tilemap;
-    
     // The background theme song
     private Song _themeSong;
-    private SoundEffect _bounceSoundEffect;
-    private SoundEffect _collectSoundEffect;
-    // Defines the bounds of the room that the slime and bat are contained within.
-    private Rectangle _roomBounds;
-    // The SpriteFont Description used to draw text.
-    private SpriteFont _font;
-
-    // Defines the position to draw the score text at.
-    private Vector2 _scoreTextPosition;
-
-    // Defines the origin used when drawing the score text.
-    private Vector2 _scoreTextOrigin;
+    private Scene _currentScene;
+    public const int DesignWidth = 1280;
+    public const int DesignHeight = 720;
     public Game1() : base("MyGame01 windows", DesignWidth, DesignHeight, false)
     {
 
     }
-
     protected override void Initialize()
     {
         base.Initialize();
+        _currentScene = new TitleScene();
+        ChangeScene(_currentScene);
     }
-
     protected override void LoadContent()
     {
-        // Create the texture atlas from the XML configuration file
-        TextureAtlas atlas = TextureAtlas.FromFile(Content, "images/atlas-definition.xml");
-
-        _slime = atlas.CreateAnimatedSprite("slime-animation");
-        _slime.Scale = new Vector2(4.0f, 4.0f);
-        _slime.CenterOrigin();
-
-        _bat = atlas.CreateAnimatedSprite("bat-animation");
-        _bat.Scale = new Vector2(4.0f, 4.0f);
-        _bat.CenterOrigin();
-
-        // Create the tilemap from the XML configuration file.
-        _tilemap = Tilemap.FromFile(Content, "images/tilemap-definition.xml");
-        _tilemap.Scale = new Vector2(4.0f, 4.0f);
-
-        Rectangle screenBounds = GraphicsDevice.PresentationParameters.Bounds;
-
-        _roomBounds = new Rectangle(
-             (int)_tilemap.TileWidth,
-             (int)_tilemap.TileHeight,
-             screenBounds.Width - (int)_tilemap.TileWidth * 2,
-             screenBounds.Height - (int)_tilemap.TileHeight * 2
-         );
-
-        // Load the bounce sound effect
-        _bounceSoundEffect = Content.Load<SoundEffect>("audio/bounce");
-
-        // Load the collect sound effect
-        _collectSoundEffect = Content.Load<SoundEffect>("audio/collect");
-
         // Load the background theme music
         _themeSong = Content.Load<Song>("audio/theme");
-        // Load the font
-        _font = Content.Load<SpriteFont>("fonts/04B_30");
-
-        _gameLogic = new SnakeGame(DesignWidth, DesignHeight);
         // Start playing the background music.
         Audio.PlaySong(_themeSong);
-
-        ChangeScene(new TitleScene());
-
-        // Set the position of the score text to align to the left edge of the
-        // room bounds, and to vertically be at the center of the first tile.
-        _scoreTextPosition = new Vector2(_roomBounds.Left, _tilemap.TileHeight * 0.5f);
-
-        // Set the origin of the text so it is left-centered.
-        float scoreTextYOrigin = _font.MeasureString("Score").Y * 0.5f;
-        _scoreTextOrigin = new Vector2(0, scoreTextYOrigin);
-
-        _gameLogic.RoomBounds = _roomBounds;
-        _gameLogic.Tilemap = _tilemap;
-        
-        _gameLogic.SlimeWidth = _slime.Width;
-        _gameLogic.SlimeHeight = _slime.Height;
-        _gameLogic.BatWidth = _bat.Width;
-        _gameLogic.BatHeight = _bat.Height;
-
-        StartNewGame();
     }
-    public void StartNewGame()
-    {
-        _currentMoveCommand = MoveCommand.None;
-
-        int centerRow = _tilemap.Rows / 2;
-        int centerColumn = _tilemap.Columns / 2;
-
-        Vector2 pos = new Vector2(
-            centerColumn * _tilemap.TileWidth + _tilemap.TileWidth * 0.5f,
-            centerRow * _tilemap.TileHeight + _tilemap.TileHeight * 0.5f
-        );
-
-        _gameLogic.Reset(pos);
-    }
+    
     protected override void Update(GameTime gameTime)
     {
         base.Update(gameTime);
     }
-    public void UpdateGameWorld(GameTime gameTime)
-    {
-        // Update the slime animated sprite.
-        _slime.Update(gameTime);
-
-        // Update the bat animated sprite.
-        _bat.Update(gameTime);
-
-        MoveCommand newCommand = ReadKeyboardMoveCommand();
-        if (newCommand != MoveCommand.None && !IsOpposite(_currentMoveCommand, newCommand))
-        {
-            _currentMoveCommand = newCommand;
-        }
-
-        _gameLogic.Update(gameTime, _currentMoveCommand);
-        
-        if (_gameLogic.DidCollectThisFrame)
-        {
-            Audio.PlaySoundEffect(_collectSoundEffect);
-        }
-
-        if (_gameLogic.DidBounceThisFrame)
-        {
-            Audio.PlaySoundEffect(_bounceSoundEffect);
-        }
-    }
-    private MoveCommand ReadKeyboardMoveCommand()
-    {
-        GamePadInfo gamePadOne = Input.GamePads[(int)PlayerIndex.One];
-
-        // If the M key is pressed, toggle mute state for audio.
-        if (Input.Keyboard.WasKeyJustPressed(Keys.M))
-        {
-            Audio.ToggleMute();
-        }
-
-        if (Input.Keyboard.WasKeyJustPressed(Keys.OemPlus) ||
-    Input.Keyboard.WasKeyJustPressed(Keys.Add))
-        {
-            Audio.SongVolume += 0.1f;
-            Audio.SoundEffectVolume += 0.1f;
-        }
-
-        if (Input.Keyboard.WasKeyJustPressed(Keys.OemMinus) ||
-            Input.Keyboard.WasKeyJustPressed(Keys.Subtract))
-        {
-            Audio.SongVolume -= 0.1f;
-            Audio.SoundEffectVolume -= 0.1f;
-        }
-
-        if (Input.Keyboard.IsKeyDown(Keys.W) || Input.Keyboard.IsKeyDown(Keys.Up)|| gamePadOne.IsButtonDown(Buttons.DPadUp))
-            return MoveCommand.Up;
-
-        if (Input.Keyboard.IsKeyDown(Keys.S) || Input.Keyboard.IsKeyDown(Keys.Down)|| gamePadOne.IsButtonDown(Buttons.DPadDown))
-            return MoveCommand.Down;
-
-        if (Input.Keyboard.IsKeyDown(Keys.A) || Input.Keyboard.IsKeyDown(Keys.Left)|| gamePadOne.IsButtonDown(Buttons.DPadLeft))
-            return MoveCommand.Left;
-
-        if (Input.Keyboard.IsKeyDown(Keys.D) || Input.Keyboard.IsKeyDown(Keys.Right)|| gamePadOne.IsButtonDown(Buttons.DPadRight))
-            return MoveCommand.Right;
-
-        return MoveCommand.None;
-    }
-    private static bool IsOpposite(MoveCommand a, MoveCommand b)
-    {
-        return (a == MoveCommand.Up && b == MoveCommand.Down) ||
-               (a == MoveCommand.Down && b == MoveCommand.Up) ||
-               (a == MoveCommand.Left && b == MoveCommand.Right) ||
-               (a == MoveCommand.Right && b == MoveCommand.Left);
-    }
     protected override void Draw(GameTime gameTime)
     {
         base.Draw(gameTime);
-    }
-    public void DrawGameWorld(GameTime gameTime)
-    {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        SpriteBatch.Begin(samplerState: SamplerState.PointClamp);
-
-        _tilemap.Draw(SpriteBatch);
-        _slime.Draw(SpriteBatch, _gameLogic.SlimePosition);
-        _bat.Draw(SpriteBatch, _gameLogic.BatPosition);
-
-        SpriteBatch.DrawString(
-            _font,
-            $"Score: {_gameLogic.Score}",
-            _scoreTextPosition,
-            Color.White,
-            0.0f,
-            _scoreTextOrigin,
-            1.0f,
-            SpriteEffects.None,
-            0.0f
-        );
-
-        SpriteBatch.End();
     }
 }
