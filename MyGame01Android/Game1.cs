@@ -10,6 +10,9 @@ using SnakeGameLib;
 using MyGame01Android.Scenes;
 using MyGameLib01.Input;
 using MyGameLib01.Scenes;
+using Gum.Forms;
+using Gum.Forms.Controls;
+using MonoGameGum;
 
 namespace MyGame01Android;
 public class Game1 : Core
@@ -38,10 +41,25 @@ public class Game1 : Core
         ScaleMatrix = GetScaleMatrix();
         InverseScaleMatrix = Matrix.Invert(ScaleMatrix);
 
+        InitializeGum();
+
         _currentScene = new TitleScene();
         ChangeScene(_currentScene);
     }
+    private void InitializeGum()
+    {
+        GumService.Default.Initialize(this, DefaultVisualsVersion.V3);
 
+        GumService.Default.ContentLoader.XnaContentManager = Core.Instance.Content;
+
+        // Android 不需要注册键盘、手柄导航
+        // FrameworkElement.KeyboardsForUiControl.Add(...)
+        // FrameworkElement.GamePadsForUiControl.AddRange(...)
+
+        GumService.Default.CanvasWidth = GraphicsDevice.PresentationParameters.BackBufferWidth / 4.0f;
+        GumService.Default.CanvasHeight = GraphicsDevice.PresentationParameters.BackBufferHeight / 4.0f;
+        GumService.Default.Renderer.Camera.Zoom = 4.0f;
+    }
     protected override void LoadContent()
     {
         // Load the background theme music

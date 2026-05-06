@@ -9,6 +9,11 @@ using MyGameLib01.Graphics;
 using MyGameLib01.Input;
 using MyGameLib01.Scenes;
 using SnakeGameLib;
+using MonoGameGum;
+using Gum.Forms.Controls;
+using MonoGameGum.GueDeriving;
+using Gum.DataTypes;
+using Gum.Wireframe;
 
 namespace MyGame01Android.Scenes;
 
@@ -35,13 +40,25 @@ public class GameScene : Scene
     private SnakeGame _gameLogic = null!;
     private MoveCommand _currentMoveCommand = MoveCommand.None;
 
-    private Rectangle _backButtonBounds;
-    private const string BACK_TEXT = "Back";
-    private Vector2 _backTextPos;
-    
+    // private Rectangle _backButtonBounds;
+    // private const string BACK_TEXT = "Back";
+    // private Vector2 _backTextPos;
+    private Button _pauseButton;
+    private Panel _pausePanel;
+    private Button _resumeButton;
+    private SoundEffect _uiSoundEffect;
     public override void Initialize()
     {
         base.Initialize();
+
+        InitializeUI();
+    }
+    private void InitializeUI()
+    {
+        GumService.Default.Root.Children.Clear();
+
+        CreatePauseButton();
+        CreatePausePanel();
     }
     public override void LoadContent()
     {
@@ -77,16 +94,18 @@ public class GameScene : Scene
         // Load the font for the standard text.
         _font = Content.Load<SpriteFont>("fonts/04B_30");
 
-        Vector2 size = _font.MeasureString(BACK_TEXT);
-        // 左上角原点，故需要减去高度的一半，才能居中显示
-        _backTextPos = new Vector2(_roomBounds.Right - size.X, _tilemap.TileHeight * 0.5f - size.Y * 0.5f);
+        _uiSoundEffect = Core.Instance.Content.Load<SoundEffect>("audio/ui");
 
-        _backButtonBounds = new Rectangle(
-            (int)_backTextPos.X,
-            (int)_backTextPos.Y,
-            (int)size.X,
-            (int)size.Y
-        );
+        // Vector2 size = _font.MeasureString(BACK_TEXT);
+        // // 左上角原点，故需要减去高度的一半，才能居中显示
+        // _backTextPos = new Vector2(_roomBounds.Right - size.X, _tilemap.TileHeight * 0.5f - size.Y * 0.5f);
+
+        // _backButtonBounds = new Rectangle(
+        //     (int)_backTextPos.X,
+        //     (int)_backTextPos.Y,
+        //     (int)size.X,
+        //     (int)size.Y
+        // );
 
         _gameLogic = new SnakeGame(Game1.DesignWidth, Game1.DesignHeight);
 
@@ -120,9 +139,10 @@ public class GameScene : Scene
     }
     public override void Update(GameTime gameTime)
     {
-        if (Core.Input.Touch.WasJustPressedIn(_backButtonBounds))
+        GumService.Default.Update(gameTime);
+
+        if (_pausePanel.IsVisible)
         {
-            Core.ChangeScene(new TitleScene());
             return;
         }
 
@@ -202,14 +222,90 @@ public class GameScene : Scene
             SpriteEffects.None, // effects
             0.0f                // layerDepth
         );
-        
-        Core.SpriteBatch.DrawString(
-            _font,
-            BACK_TEXT,
-            _backTextPos,
-            Color.White
-        );
+
+        // Core.SpriteBatch.DrawString(
+        //     _font,
+        //     BACK_TEXT,
+        //     _backTextPos,
+        //     Color.White
+        // );
         // Always end the sprite batch when finished.
         Core.SpriteBatch.End();
+
+        GumService.Default.Draw();
+    }
+
+    private void CreatePauseButton()
+    {
+        _pauseButton = new Button();
+        _pauseButton.Text = "Pause";
+        _pauseButton.Anchor(Anchor.TopRight);
+        _pauseButton.X = -9;
+        _pauseButton.Y = 9;
+        _pauseButton.Width = 80;
+        _pauseButton.Click += HandlePauseButtonClicked;
+        _pauseButton.AddToRoot();
+    }
+
+    private void HandlePauseButtonClicked(object sender, EventArgs e)
+    {
+        Core.Audio.PlaySoundEffect(_uiSoundEffect);
+        PauseGame();
+    }
+    private void CreatePausePanel()
+    {
+        _pausePanel = new Panel();
+        _pausePanel.Anchor(Anchor.Center);
+        _pausePanel.WidthUnits = DimensionUnitType.Absolute;
+        _pausePanel.HeightUnits = DimensionUnitType.Absolute;
+        _pausePanel.Height = 70;
+        _pausePanel.Width = 264;
+        _pausePanel.IsVisible = false;
+        _pausePanel.AddToRoot();
+
+        var background = new ColoredRectangleRuntime();
+        background.Dock(Dock.Fill);
+        background.Color = Color.DarkBlue;
+        _pausePanel.AddChild(background);
+
+        var textInstance = new TextRuntime();
+        textInstance.Text = "PAUSED";
+        textInstance.X = 10f;
+        textInstance.Y = 10f;
+        _pausePanel.AddChild(textInstance);
+
+        _resumeButton = new Button();
+        _resumeButton.Text = "RESUME";
+        _resumeButton.Anchor(Anchor.BottomLeft);
+        _resumeButton.X = 9f;
+        _resumeButton.Y = -9f;
+        _resumeButton.Width = 80;
+        _resumeButton.Click += HandleResumeButtonClicked;
+        _pausePanel.AddChild(_resumeButton);
+
+        var quitButton = new Button();
+        quitButton.Text = "QUIT";
+        quitButton.Anchor(Anchor.BottomRight);
+        quitButton.X = -9f;
+        quitButton.Y = -9f;
+        quitButton.Width = 80;
+        quitButton.Click += HandleQuitButtonClicked;
+        _pausePanel.AddChild(quitButton);
+    }
+    private void PauseGame()
+    {
+        _pausePanel.IsVisible = true;
+    }
+
+    private void HandleResumeButtonClicked(object sender, EventArgs e)
+    {
+        Core.Audio.PlaySoundEffect(_uiSoundEffect);
+        _pausePanel.IsVisible = false;
+    }
+
+    private void HandleQuitButtonClicked(object sender, EventArgs e)
+    {
+        Core.Audio.PlaySoundEffect(_uiSoundEffect);
+        Core.ChangeScene(new TitleScene());
     }
 }
