@@ -33,6 +33,9 @@ public class Game1 : Core
     {
         base.Initialize();
 
+        // Start playing the background music.
+        Audio.PlaySong(_themeSong);
+
         TouchPanel.EnabledGestures =
         GestureType.HorizontalDrag |
         GestureType.VerticalDrag |
@@ -50,31 +53,29 @@ public class Game1 : Core
     {
         GumService.Default.Initialize(this, DefaultVisualsVersion.V3);
 
-        GumService.Default.ContentLoader.XnaContentManager = Core.Instance.Content;
+        GumService.Default.ContentLoader.XnaContentManager = Core.Content;
 
         // Android 不需要注册键盘、手柄导航
         // FrameworkElement.KeyboardsForUiControl.Add(...)
         // FrameworkElement.GamePadsForUiControl.AddRange(...)
 
-        GumService.Default.CanvasWidth = GraphicsDevice.PresentationParameters.BackBufferWidth / 4.0f;
-        GumService.Default.CanvasHeight = GraphicsDevice.PresentationParameters.BackBufferHeight / 4.0f;
-        GumService.Default.Renderer.Camera.Zoom = 4.0f;
+        GumService.Default.CanvasWidth = GraphicsDevice.PresentationParameters.BackBufferWidth / 6.0f;
+        GumService.Default.CanvasHeight = GraphicsDevice.PresentationParameters.BackBufferHeight / 6.0f;
+        GumService.Default.Renderer.Camera.Zoom = 6.0f;
     }
     protected override void LoadContent()
     {
         // Load the background theme music
         _themeSong = Content.Load<Song>("audio/theme");
-        // Start playing the background music.
-        Audio.PlaySong(_themeSong);
     }
-    protected override void Update(GameTime gameTime)
-    {
-        base.Update(gameTime);
-    }
-    protected override void Draw(GameTime gameTime)
-    {
-        base.Draw(gameTime);
-    }
+    // protected override void Update(GameTime gameTime)
+    // {
+    //     base.Update(gameTime);
+    // }
+    // protected override void Draw(GameTime gameTime)
+    // {
+    //     base.Draw(gameTime);
+    // }
     public Matrix GetScaleMatrix()
     {
         float viewportWidth = GraphicsDevice.Viewport.Width;

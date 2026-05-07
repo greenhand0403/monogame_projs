@@ -14,6 +14,8 @@ using Gum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using Gum.DataTypes;
 using Gum.Wireframe;
+using Gum.Managers;
+using MyGame01Android.UI;
 
 namespace MyGame01Android.Scenes;
 
@@ -43,9 +45,14 @@ public class GameScene : Scene
     // private Rectangle _backButtonBounds;
     // private const string BACK_TEXT = "Back";
     // private Vector2 _backTextPos;
-    private Button _pauseButton;
+    private AnimatedButton _pauseButton;
     private Panel _pausePanel;
-    private Button _resumeButton;
+    // A reference to the resume button UI element so we can focus it
+    // when the game is paused.
+    private AnimatedButton _resumeButton;
+    // Reference to the texture atlas that we can pass to UI elements when they
+    // are created.
+    private TextureAtlas _atlas;
     private SoundEffect _uiSoundEffect;
     public override void Initialize()
     {
@@ -63,15 +70,16 @@ public class GameScene : Scene
     public override void LoadContent()
     {
         base.LoadContent();
+
         // Create the texture atlas from the XML configuration file
-        TextureAtlas atlas = TextureAtlas.FromFile(Content, "images/atlas-definition.xml");
+        _atlas = TextureAtlas.FromFile(Content, "images/atlas-definition.xml");
 
         // Create the slime animated sprite from the atlas.
-        _slime = atlas.CreateAnimatedSprite("slime-animation");
+        _slime = _atlas.CreateAnimatedSprite("slime-animation");
         _slime.Scale = new Vector2(4.0f, 4.0f);
         _slime.CenterOrigin();
         // Create the bat animated sprite from the atlas.
-        _bat = atlas.CreateAnimatedSprite("bat-animation");
+        _bat = _atlas.CreateAnimatedSprite("bat-animation");
         _bat.Scale = new Vector2(4.0f, 4.0f);
         _bat.CenterOrigin();
 
@@ -79,12 +87,6 @@ public class GameScene : Scene
         _tilemap = Tilemap.FromFile(Content, "images/tilemap-definition.xml");
         _tilemap.Scale = new Vector2(4.0f, 4.0f);
 
-        _roomBounds = new Rectangle(
-             (int)_tilemap.TileWidth,
-             (int)_tilemap.TileHeight,
-             Game1.DesignWidth - (int)_tilemap.TileWidth * 2,
-             Game1.DesignHeight - (int)_tilemap.TileHeight * 2
-         );
         // Load the bounce sound effect
         _bounceSoundEffect = Content.Load<SoundEffect>("audio/bounce");
 
@@ -94,7 +96,7 @@ public class GameScene : Scene
         // Load the font for the standard text.
         _font = Content.Load<SpriteFont>("fonts/04B_30");
 
-        _uiSoundEffect = Core.Instance.Content.Load<SoundEffect>("audio/ui");
+        _uiSoundEffect = Content.Load<SoundEffect>("audio/ui");
 
         // Vector2 size = _font.MeasureString(BACK_TEXT);
         // // 左上角原点，故需要减去高度的一半，才能居中显示
@@ -108,6 +110,13 @@ public class GameScene : Scene
         // );
 
         _gameLogic = new SnakeGame(Game1.DesignWidth, Game1.DesignHeight);
+
+        _roomBounds = new Rectangle(
+             (int)_tilemap.TileWidth,
+             (int)_tilemap.TileHeight,
+             Game1.DesignWidth - (int)_tilemap.TileWidth * 2,
+             Game1.DesignHeight - (int)_tilemap.TileHeight * 2
+         );
 
         // Set the position of the score text to align to the left edge of the
         // room bounds, and to vertically be at the center of the first tile.
@@ -200,7 +209,7 @@ public class GameScene : Scene
     }
     public override void Draw(GameTime gameTime)
     {
-        Core.Instance.GraphicsDevice.Clear(Color.CornflowerBlue);
+        Core.GraphicsDevice.Clear(Color.CornflowerBlue);
 
         Core.SpriteBatch.Begin(samplerState: SamplerState.PointClamp, transformMatrix: Core.ScaleMatrix);
         // Draw the tilemap.
@@ -237,12 +246,12 @@ public class GameScene : Scene
 
     private void CreatePauseButton()
     {
-        _pauseButton = new Button();
+        _pauseButton = new AnimatedButton(_atlas);
         _pauseButton.Text = "Pause";
         _pauseButton.Anchor(Anchor.TopRight);
-        _pauseButton.X = -9;
-        _pauseButton.Y = 9;
-        _pauseButton.Width = 80;
+        _pauseButton.X = -4;
+        _pauseButton.Y = 4;
+        _pauseButton.Width = 40;
         _pauseButton.Click += HandlePauseButtonClicked;
         _pauseButton.AddToRoot();
     }
@@ -263,18 +272,28 @@ public class GameScene : Scene
         _pausePanel.IsVisible = false;
         _pausePanel.AddToRoot();
 
-        var background = new ColoredRectangleRuntime();
+        TextureRegion backgroundRegion = _atlas.GetRegion("panel-background");
+
+        NineSliceRuntime background = new NineSliceRuntime();
         background.Dock(Dock.Fill);
-        background.Color = Color.DarkBlue;
+        background.Texture = backgroundRegion.Texture;
+        background.TextureAddress = TextureAddress.Custom;
+        background.TextureHeight = backgroundRegion.Height;
+        background.TextureLeft = backgroundRegion.SourceRectangle.Left;
+        background.TextureTop = backgroundRegion.SourceRectangle.Top;
+        background.TextureWidth = backgroundRegion.Width;
         _pausePanel.AddChild(background);
 
         var textInstance = new TextRuntime();
         textInstance.Text = "PAUSED";
+        textInstance.CustomFontFile = @"fonts/04b_30.fnt";
+        textInstance.UseCustomFont = true;
+        textInstance.FontScale = 0.5f;
         textInstance.X = 10f;
         textInstance.Y = 10f;
         _pausePanel.AddChild(textInstance);
 
-        _resumeButton = new Button();
+        _resumeButton = new AnimatedButton(_atlas);
         _resumeButton.Text = "RESUME";
         _resumeButton.Anchor(Anchor.BottomLeft);
         _resumeButton.X = 9f;
@@ -283,7 +302,7 @@ public class GameScene : Scene
         _resumeButton.Click += HandleResumeButtonClicked;
         _pausePanel.AddChild(_resumeButton);
 
-        var quitButton = new Button();
+        AnimatedButton quitButton = new AnimatedButton(_atlas);
         quitButton.Text = "QUIT";
         quitButton.Anchor(Anchor.BottomRight);
         quitButton.X = -9f;

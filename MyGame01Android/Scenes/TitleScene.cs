@@ -9,6 +9,8 @@ using MonoGameGum;
 using Gum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using Microsoft.Xna.Framework.Audio;
+using MyGame01Android.UI;
+using MyGameLib01.Graphics;
 
 namespace MyGame01Android.Scenes;
 
@@ -57,8 +59,15 @@ public class TitleScene : Scene
     private SoundEffect _uiSoundEffect;
     private Panel _titleScreenButtonsPanel;
     private Panel _optionsPanel;
-    private Button _optionsButton;
-    private Button _optionsBackButton;
+    // The options button used to open the options menu.
+    private AnimatedButton _optionsButton;
+
+    // The back button used to exit the options menu back to the title menu.
+    private AnimatedButton _optionsBackButton;
+
+    // Reference to the texture atlas that we can pass to UI elements when they
+    // are created.
+    private TextureAtlas _atlas;
     public override void Initialize()
     {
         // LoadContent is called during base.Initialize().
@@ -91,21 +100,21 @@ public class TitleScene : Scene
 
         // Set the background pattern destination rectangle to fill the entire
         // screen background.
-        _backgroundDestination = Core.Instance.GraphicsDevice.PresentationParameters.Bounds;
+        _backgroundDestination = Core.GraphicsDevice.PresentationParameters.Bounds;
 
         InitializeUI();
     }
     private void InitializeUI()
     {
         GumService.Default.Root.Children.Clear();
-
+        
         CreateTitlePanel();
         CreateOptionsPanel();
     }
     public override void LoadContent()
     {
         // Load the font for the standard text.
-        _font = Core.Instance.Content.Load<SpriteFont>("fonts/04B_30");
+        _font = Content.Load<SpriteFont>("fonts/04B_30");
 
         // Load the font for the title text.
         _font5x = Content.Load<SpriteFont>("fonts/04B_30_5x");
@@ -113,7 +122,11 @@ public class TitleScene : Scene
         // Load the background pattern texture.
         _backgroundPattern = Content.Load<Texture2D>("images/background-pattern");
 
-        _uiSoundEffect = Core.Instance.Content.Load<SoundEffect>("audio/ui");
+        _uiSoundEffect = Content.Load<SoundEffect>("audio/ui");
+
+        // Load the texture atlas from the xml configuration file.
+        _atlas = TextureAtlas.FromFile(Content, "images/atlas-definition.xml");
+
     }
     public override void Update(GameTime gameTime)
     {
@@ -136,8 +149,8 @@ public class TitleScene : Scene
     }
     public override void Draw(GameTime gameTime)
     {
-        Core.Instance.GraphicsDevice.Clear(new Color(32, 40, 78, 255));
-
+        Core.GraphicsDevice.Clear(new Color(32, 40, 78, 255));
+        
         // Draw the background pattern first using the PointWrap sampler state.
         Core.SpriteBatch.Begin(samplerState: SamplerState.PointWrap);
         Core.SpriteBatch.Draw(_backgroundPattern, _backgroundDestination, new Rectangle(_backgroundOffset.ToPoint(), _backgroundDestination.Size), Color.White * 0.5f);
@@ -180,20 +193,18 @@ public class TitleScene : Scene
         _titleScreenButtonsPanel.Dock(Gum.Wireframe.Dock.Fill);
         _titleScreenButtonsPanel.AddToRoot();
 
-        var startButton = new Button();
+        AnimatedButton startButton = new AnimatedButton(_atlas);
         startButton.Anchor(Gum.Wireframe.Anchor.BottomLeft);
         startButton.X = 50;
         startButton.Y = -12;
-        startButton.Width = 70;
         startButton.Text = "Start";
         startButton.Click += HandleStartClicked;
         _titleScreenButtonsPanel.AddChild(startButton);
 
-        _optionsButton = new Button();
+        _optionsButton = new AnimatedButton(_atlas);
         _optionsButton.Anchor(Gum.Wireframe.Anchor.BottomRight);
         _optionsButton.X = -50;
         _optionsButton.Y = -12;
-        _optionsButton.Width = 70;
         _optionsButton.Text = "Options";
         _optionsButton.Click += HandleOptionsClicked;
         _titleScreenButtonsPanel.AddChild(_optionsButton);
@@ -217,19 +228,18 @@ public class TitleScene : Scene
         _optionsPanel.IsVisible = false;
         _optionsPanel.AddToRoot();
 
-        var optionsText = new TextRuntime();
+        TextRuntime optionsText = new TextRuntime();
         optionsText.X = 10;
         optionsText.Y = 10;
         optionsText.Text = "OPTIONS";
+        optionsText.UseCustomFont = true;
+        optionsText.FontScale = 0.5f;
+        optionsText.CustomFontFile = @"fonts/04b_30.fnt";
         _optionsPanel.AddChild(optionsText);
 
-        var musicLabel = new Label();
-        musicLabel.Text = "Music";
-        musicLabel.X = 35;
-        musicLabel.Y = 35;
-        _optionsPanel.AddChild(musicLabel);
-
-        var musicSlider = new Slider();
+        OptionsSlider musicSlider = new OptionsSlider(_atlas);
+        musicSlider.Name = "MusicSlider";
+        musicSlider.Text = "MUSIC";
         musicSlider.Anchor(Gum.Wireframe.Anchor.Top);
         musicSlider.Y = 30f;
         musicSlider.Minimum = 0;
@@ -241,13 +251,9 @@ public class TitleScene : Scene
         musicSlider.ValueChangeCompleted += HandleMusicSliderValueChangeCompleted;
         _optionsPanel.AddChild(musicSlider);
 
-        var sfxLabel = new Label();
-        sfxLabel.Text = "SFX";
-        sfxLabel.X = 20;
-        sfxLabel.Y = 80;
-        _optionsPanel.AddChild(sfxLabel);
-
-        var sfxSlider = new Slider();
+        OptionsSlider sfxSlider = new OptionsSlider(_atlas);
+        sfxSlider.Name = "SfxSlider";
+        sfxSlider.Text = "SFX";
         sfxSlider.Anchor(Gum.Wireframe.Anchor.Top);
         sfxSlider.Y = 93;
         sfxSlider.Minimum = 0;
@@ -259,7 +265,7 @@ public class TitleScene : Scene
         sfxSlider.ValueChangeCompleted += HandleSfxSliderChangeCompleted;
         _optionsPanel.AddChild(sfxSlider);
 
-        _optionsBackButton = new Button();
+        _optionsBackButton = new AnimatedButton(_atlas);
         _optionsBackButton.Text = "BACK";
         _optionsBackButton.Anchor(Gum.Wireframe.Anchor.BottomRight);
         _optionsBackButton.X = -28f;
@@ -267,6 +273,7 @@ public class TitleScene : Scene
         _optionsBackButton.Click += HandleOptionsButtonBack;
         _optionsPanel.AddChild(_optionsBackButton);
     }
+
     private void HandleSfxSliderChanged(object sender, EventArgs args)
     {
         var slider = (Slider)sender;
