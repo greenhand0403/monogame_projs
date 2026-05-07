@@ -30,7 +30,10 @@ public class Game1 : Core
     protected override void Initialize()
     {
         base.Initialize();
-        
+
+        // Start playing the background music.
+        Audio.PlaySong(_themeSong);
+
         InitializeGum();
 
         _currentScene = new TitleScene();
@@ -45,7 +48,7 @@ public class Game1 : Core
 
         // Tell the Gum service which content manager to use. We will tell it to
         // use the global content manager from our Core.
-        GumService.Default.ContentLoader.XnaContentManager = Core.Instance.Content;
+        GumService.Default.ContentLoader.XnaContentManager = Content;
 
         // Register keyboard input for UI control.
         FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard);
@@ -75,16 +78,5 @@ public class Game1 : Core
     {
         // Load the background theme music
         _themeSong = Content.Load<Song>("audio/theme");
-        // Start playing the background music.
-        Audio.PlaySong(_themeSong);
-    }
-    
-    protected override void Update(GameTime gameTime)
-    {
-        base.Update(gameTime);
-    }
-    protected override void Draw(GameTime gameTime)
-    {
-        base.Draw(gameTime);
     }
 }

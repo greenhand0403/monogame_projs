@@ -27,15 +27,16 @@ public class Core : Game
     /// </summary>
     public static GraphicsDeviceManager Graphics { get; private set; }
 
-    // 改名，不要再和 Game.GraphicsDevice 同名
-    public static GraphicsDevice SharedGraphicsDevice { get; private set; }
+    public static new GraphicsDevice GraphicsDevice { get; private set; }
 
     /// <summary>
     /// Gets the sprite batch used for all 2D rendering.
     /// </summary>
     public static SpriteBatch SpriteBatch { get; private set; }
-
-    public static ContentManager SharedContent { get; private set; }
+    /// <summary>
+    /// Gets the content manager used to load global assets.
+    /// </summary>
+    public static new ContentManager Content { get; private set; }
     /// <summary>
     /// Gets a reference to the input management system.
     /// </summary>
@@ -98,19 +99,20 @@ public class Core : Game
 
     protected override void Initialize()
     {
-        Input = new InputManager();
-        // Create a new audio controller.
-        Audio = new AudioController();
-        
         base.Initialize();
-
+        
         // Set the core's graphics device to a reference of the base Game's
         // graphics device.
-        SharedGraphicsDevice = base.GraphicsDevice;
+        GraphicsDevice = base.GraphicsDevice;
 
         // Create the sprite batch instance.
-        SpriteBatch = new SpriteBatch(SharedGraphicsDevice);
+        SpriteBatch = new SpriteBatch(GraphicsDevice);
+
         // Create a new input manager.
+        Input = new InputManager();
+        
+        // Create a new audio controller.
+        Audio = new AudioController();
     }
     protected override void UnloadContent()
     {
