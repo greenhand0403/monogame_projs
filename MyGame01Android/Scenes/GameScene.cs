@@ -249,9 +249,11 @@ public class GameScene : Scene
         _pauseButton = new AnimatedButton(_atlas);
         _pauseButton.Text = "Pause";
         _pauseButton.Anchor(Anchor.TopRight);
-        _pauseButton.X = -4;
-        _pauseButton.Y = 4;
+        _pauseButton.X = -10;
+        _pauseButton.Y = 10;
         _pauseButton.Width = 40;
+        // 注意屏幕边缘的触摸安全区域是触摸不到的，所以最好偏移一点并且把按钮设置得大一点
+        // _pauseButton.Height = 20;
         _pauseButton.Click += HandlePauseButtonClicked;
         _pauseButton.AddToRoot();
     }

@@ -7,6 +7,7 @@ using Gum.Forms.Controls;
 using MonoGameGum.GueDeriving;
 using MyGameLib01.Graphics;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 
 namespace MyGame01Android.UI;
 

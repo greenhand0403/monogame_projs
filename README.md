@@ -1,17 +1,20 @@
-just a learning project
+Just a learning project
 
-确保已安装模版
+### some cmd to install
 
-dotnet tool install --global dotnet-mgcb-editor
+`dotnet tool install --global dotnet-mgcb-editor`
 
-mgcb-editor --register
+`mgcb-editor --register`
 
-dotnet new --install MonoGame.Templates.CSharp
-
-use monogame to create a new game project
+`dotnet new --install MonoGame.Templates.CSharp`
 
 use `dotnet new mgdesktopgl` to create a new game project
 
-check https://docs.monogame.net/articles/tutorials/building_2d_games/index.html
+check [monogame tutorials](https://docs.monogame.net/articles/tutorials/building_2d_games/index.html)
 
-设备分辨率属于平台壳，设计分辨率属于具体游戏，分辨率适配工具属于 MyGameLib01，游戏规则属于 SnakeGameLib，输入采集属于平台壳，输入命令属于 SnakeGameLib
+### To Do
+
+- [ ] Make a Dodge the lightning game ?
+
+- [ ] Make a Maze + vampire survivor game ?
+
